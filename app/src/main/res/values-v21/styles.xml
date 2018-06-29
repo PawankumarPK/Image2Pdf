@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="MyProgressBarCircular" parent="@style/MyProgressBarCircular" tools:ignore="ResourceCycle">
+        <item name="android:indeterminateTint">#ffa12f</item>
+    </style>
+</resources>
