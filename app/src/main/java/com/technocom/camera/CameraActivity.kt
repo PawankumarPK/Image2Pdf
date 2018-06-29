@@ -131,4 +131,4 @@ class CameraActivity : BaseActivity() {
         super.onDestroy()
     }
 }
-//nj
+//nj,;lmlknlknl
