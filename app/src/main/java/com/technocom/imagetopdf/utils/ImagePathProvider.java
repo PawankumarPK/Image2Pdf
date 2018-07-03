@@ -34,7 +34,7 @@ public class ImagePathProvider {
      * @return ArrayList with external images Path
      */
     private static ArrayList<String> getExternalImagesPath(Context context) {
-        return getImagesPathFromUri(context, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        return getImagesPathFromUri(context, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
     }
 
     /**
@@ -44,7 +44,7 @@ public class ImagePathProvider {
      * @return ArrayList with internal images Path
      */
     private static ArrayList<String> getInternalImagesPath(Context context) {
-        return getImagesPathFromUri(context, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
+        return getImagesPathFromUri(context, MediaStore.Images.Media.INTERNAL_CONTENT_URI);
     }
 
     private static ArrayList<String> getImagesPathFromUri(Context context, Uri uri) {

@@ -9,9 +9,11 @@ import android.support.annotation.RequiresApi
 import android.support.design.widget.Snackbar
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.view.Menu
 import android.view.MenuItem
 import com.technocom.imagetopdf.R
 import com.technocom.imagetopdf.fragments.Home
+import com.technocom.imagetopdf.fragments.Settings
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -21,18 +23,26 @@ Created by Pawan kumar
 
 class MainActivity : BaseActivity() {
 
+    lateinit var resetInterface : ResetButton
     private val PERMISSIONS_MULTIPLE_REQUEST = 123
+
+
     companion object {
         val filesListDataResult = java.util.ArrayList<String>()
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setSupportActionBar(toolbar);
 
+        mReset.setOnClickListener{
+            if (::resetInterface.isInitialized)
+                resetInterface.reset()
+        }
         backArrow.setOnClickListener {
             onBackPressed()
-            filesListDataResult.clear()
         }
 
 
@@ -59,6 +69,7 @@ class MainActivity : BaseActivity() {
                         Manifest.permission.READ_EXTERNAL_STORAGE) + ContextCompat
                         .checkSelfPermission(this,
                                 Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE) || ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
 
@@ -111,21 +122,24 @@ class MainActivity : BaseActivity() {
         super.onBackPressed()
     }
 
-   /* override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when(item!!.itemId){
-            R.id.mAboutUs -> startActivity(Intent(applicationContext,AboutUs::class.java))
-        }
-        return true
-    }*/
+    interface ResetButton {
+        fun reset()
+    }
 
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_items, menu)
+        return true
+    }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.mAboutUs -> startActivity(Intent(applicationContext, AboutUs::class.java))
+            R.id.mSettings -> supportFragmentManager.beginTransaction().addToBackStack(null).replace(R.id.frame_container,Settings()).commit()
+
         }
-        return true
+        return super.onOptionsItemSelected(item);
     }
 
 
 }
-

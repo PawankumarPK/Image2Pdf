@@ -35,10 +35,8 @@
     <com.edmodo.cropper.CropImageView
         android:id="@+id/cropImage"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/cropImageToSize"
-        android:adjustViewBounds="true"
-        android:scaleType="centerInside" />
+        android:layout_height="match_parent"
+        android:layout_above="@+id/cropImageToSize" />
 
     <Button
         android:id="@+id/rotateLeft"

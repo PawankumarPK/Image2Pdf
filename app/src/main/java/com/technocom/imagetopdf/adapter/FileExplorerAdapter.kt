@@ -5,10 +5,11 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.squareup.picasso.Picasso
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import com.technocom.camera.SquareTransformation
 import com.technocom.imagetopdf.R
 import com.technocom.imagetopdf.dto.FileExplorerDTO
-import com.technocom.imagetopdf.utils.CropSquareTransformation
 import kotlinx.android.synthetic.main.file_explorer_adapter.view.*
 import java.io.File
 
@@ -43,10 +44,16 @@ class FileExplorerAdapter(private val context: Context, private val filesList: L
     inner class RowViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         fun onBindUi(pos: Int) {
-            Picasso.get()
-                    .load("file://" + filesList[pos].bitmap)
-                    .transform(CropSquareTransformation())
-                    .into(itemView.file_type_icon)
+//            Picasso.get()
+//                    .load("file://" + filesList[pos].bitmap)
+//                    .transform(CropSquareTransformation())
+//                    .into(itemView.file_type_icon)
+
+            val requestOptions = RequestOptions()
+            requestOptions.override(360, 640)
+            requestOptions.centerCrop()
+            requestOptions.transform(SquareTransformation())
+            Glide.with(context).load("file://" + filesList[pos].bitmap).apply(requestOptions).into(itemView.file_type_icon)
 
             itemView.setOnClickListener {
                 filesList[pos].selected = !filesList[pos].selected

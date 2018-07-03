@@ -3,15 +3,20 @@ package com.technocom.imagetopdf.adapter
 import android.app.Dialog
 import android.content.Context
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import com.squareup.picasso.Picasso
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import com.technocom.camera.SquareTransformation
 import com.technocom.imagetopdf.R
 import com.technocom.imagetopdf.fragments.PdfView
-import com.technocom.imagetopdf.utils.CropSquareTransformation
 import kotlinx.android.synthetic.main.view_holder.view.*
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+
+
 
 
 /*
@@ -32,7 +37,7 @@ class RecyclerAdapter(private val context: Context, private val list: MutableLis
         viewholder.onBind(position)
     }
 
-    inner class RecyclerViewHolder(itemView: View?) : RecyclerView.ViewHolder(itemView) {
+    inner class RecyclerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val dialog = Dialog(context)
         var delete: TextView
         var crop: TextView
@@ -44,11 +49,18 @@ class RecyclerAdapter(private val context: Context, private val list: MutableLis
         }
 
         fun onBind(position: Int) {
-            Picasso.get()
-                    .load("file://" + list[position])
-                    .transform(CropSquareTransformation())
-                    .into(itemView.spacecraftImg)
-            //itemView.spacecraftImg.setImageBitmap(list[position])
+//            Picasso.get()
+//                    .load("file://" + list[position])
+//                    .resize(360,640)
+//                    .centerCrop()
+//                    .transform(CropSquareTransformation())
+//                    .into(itemView.spacecraftImg)
+
+            val requestOptions = RequestOptions()
+            requestOptions.override(360,640)
+            requestOptions.centerCrop()
+            requestOptions.transform(SquareTransformation())
+            Glide.with(context).load("file://" + list[position]).apply(requestOptions).into(itemView.spacecraftImg)
             itemView.spacecraftImg.setOnClickListener {
                 dialog.show()
             }

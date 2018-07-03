@@ -14,7 +14,8 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
-import com.squareup.picasso.Picasso
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.technocom.imagetopdf.R
 import com.technocom.imagetopdf.activity.BaseActivity
 import com.technocom.imagetopdf.activity.MainActivity
@@ -36,7 +37,12 @@ class CameraActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
-        val pm = getPackageManager()
+        initListeners()
+        if (!packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH))
+            camera_preview.visibility = GONE
+    }
+
+    override fun onStart() {
         mCamera = getCameraInstance()
         if (mCamera == null) {
             toastLong("Unable to Open Camera")
@@ -44,11 +50,8 @@ class CameraActivity : BaseActivity() {
         }
         mPreview = CameraPreview(this, mCamera)
         camera_preview.addView(mPreview)
-        initListeners()
-        if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH))
-            camera_preview.visibility = GONE
+        super.onStart()
     }
-
     private fun initListeners() {
         capture.setOnClickListener { mCamera?.takePicture(null, null, mPicture) }
         flash.setOnClickListener { flashRadioHideShow() }
@@ -80,10 +83,12 @@ class CameraActivity : BaseActivity() {
             val fos = FileOutputStream(pictureFile)
             fos.write(data)
             fos.close()
-            Picasso.get()
-                    .load(pictureFile)
-                    .transform(CircleTransform())
-                    .into(thumb)
+//            Picasso.get()
+//                    .load(pictureFile)
+//                    .transform(CircleTransform())
+//                    .into(thumb)
+            Glide.with(this).load(pictureFile).apply(RequestOptions.circleCropTransform()).into(thumb)
+
             MainActivity.filesListDataResult.add(pictureFile.absolutePath)
             mCamera?.startPreview()
         } catch (e: FileNotFoundException) {
@@ -126,9 +131,12 @@ class CameraActivity : BaseActivity() {
         return mediaFile
     }
 
+    override fun onStop() {
+        mCamera?.stopPreview()
+        super.onStop()
+    }
     override fun onDestroy() {
         mCamera?.release()
         super.onDestroy()
     }
 }
-//nj,;lmlknlknl

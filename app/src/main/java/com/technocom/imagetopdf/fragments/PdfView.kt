@@ -1,48 +1,54 @@
 package com.technocom.imagetopdf.fragments
 
 
-import android.app.ProgressDialog
+import android.annotation.SuppressLint
+import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.database.Cursor
 import android.graphics.*
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
-import android.os.Build
-import android.os.Bundle
-import android.os.Environment
+import android.os.*
+import android.provider.MediaStore
 import android.support.annotation.RequiresApi
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.GridLayoutManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.GONE
-import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Toast
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.InterstitialAd
+import com.technocom.dtos.Dto
 import com.technocom.camera.CameraActivity
 import com.technocom.imagetopdf.R
 import com.technocom.imagetopdf.activity.CroppedImage
-import com.technocom.imagetopdf.activity.FileExplorer
 import com.technocom.imagetopdf.activity.MainActivity
 import com.technocom.imagetopdf.activity.MainActivity.Companion.filesListDataResult
 import com.technocom.imagetopdf.adapter.RecyclerAdapter
 import io.reactivex.Completable
 import io.reactivex.CompletableObserver
+import io.reactivex.MaybeObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.custom_progress_dialog.*
 import kotlinx.android.synthetic.main.fragment_pdf_view.*
+import kotlinx.android.synthetic.main.getfilename_dialog.*
 import java.io.*
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 
 /*
 Created by Pawan kumar
  */
 
-class PdfView : BaseFragment(), RecyclerAdapter.ItemClick {
+class PdfView : BaseFragment(), RecyclerAdapter.ItemClick, MainActivity.ResetButton {
 
     private lateinit var fabOpen: Animation
     private lateinit var fabClose: Animation
@@ -54,16 +60,44 @@ class PdfView : BaseFragment(), RecyclerAdapter.ItemClick {
     private lateinit var pageInfo: PdfDocument.PageInfo
     private var canClick = true
     private var progress = 0
-    private lateinit var progressDialog: ProgressDialog
-
+    lateinit var dialog: Dialog
+    private var isPause = false
+    private var isStop = false
+    private var regex = "([^\\s]+(\\.(?i)(jpg|png|jpeg))$)"
+    private var pattern: Pattern? = null
+    private var matcher: Matcher? = null
+    private val textPaint = Paint()
+    private lateinit var mInterstitialAd: InterstitialAd
+    private var fileName: String = ""
+    private var isButtonPressed = false
+    private lateinit var dto : Dto
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_pdf_view, container, false)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        (activity as MainActivity).resetInterface = this
+        dialog = Dialog(activity)
+        pattern = Pattern.compile(regex)
 
-        gallery.setOnClickListener { startActivityForResult(Intent(activity, FileExplorer::class.java), 1001) }
+        mInterstitialAd = InterstitialAd(activity)
+        textPaint.isAntiAlias = true
+        textPaint.style = Paint.Style.FILL
+        textPaint.textSize = 14f
+        textPaint.color = Color.parseColor("#FFFA0202")
+
+        if (!pref.isPremium)
+            InterstitialAdd()
+
+        gallery.setOnClickListener {
+            val photoPickerIntent = Intent(Intent.ACTION_PICK,
+                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            photoPickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            photoPickerIntent.type = "image/*"
+            startActivityForResult(photoPickerIntent, 1001)
+        }
 
         camera.setOnClickListener { startActivityForResult(Intent(activity, CameraActivity::class.java), 1002) }
 
@@ -83,12 +117,18 @@ class PdfView : BaseFragment(), RecyclerAdapter.ItemClick {
         rotateForward = AnimationUtils.loadAnimation(activity, R.anim.rotate_forward)
         rotateBackward = AnimationUtils.loadAnimation(activity, R.anim.rotate_backward)
         initRecyclerView()
+        mCounting.text = "Total Images : ${MainActivity.filesListDataResult.size}"
+    }
 
+    @SuppressLint("SetTextI18n")
+    override fun reset() {
+
+        MainActivity.filesListDataResult.clear()
+        adapter.notifyDataSetChanged()
+        mCounting.text = "Total Images : ${MainActivity.filesListDataResult.size}"
     }
 
     private fun createPDF() {
-        if (MainActivity.filesListDataResult.size == 0)
-            return
         val document = PdfDocument()
         createPdf(document, MainActivity.filesListDataResult[pageNo])
     }
@@ -100,45 +140,108 @@ class PdfView : BaseFragment(), RecyclerAdapter.ItemClick {
 
     }
 
+    @SuppressLint("SetTextI18n")
     override fun deleteImages(position: Int) {
         MainActivity.filesListDataResult.removeAt(position)
+        adapter.notifyDataSetChanged()
+        mCounting.text = "Total Images : ${MainActivity.filesListDataResult.size}"
+
     }
 
     override fun cropImage(position: Int) {
         val intent = Intent(activity, CroppedImage::class.java)
         intent.putExtra("position", position)
-        adapter.notifyDataSetChanged()
         startActivityForResult(intent, 1003)
-
     }
 
 
+    @SuppressLint("SetTextI18n")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        adapter.notifyDataSetChanged()
+        when (requestCode) {
+            1001 -> {
+                if (data == null) {
+                    return
+                }
+                for (i in 0 until data.clipData.itemCount) {
+                    val imagePath = getRealPathFromURI(data.clipData.getItemAt(i).uri)
+                    val fileName = imagePath.split("/")
+                    if (!validate(fileName[fileName.lastIndex])) {
+                        unknownFileFormat()
+                        continue
+                    }
+                    MainActivity.filesListDataResult.add(imagePath)
+                }
 
+            }
+        }
+        adapter.notifyDataSetChanged()
+        mCounting.text = "Total Images : ${MainActivity.filesListDataResult.size}"
+    }
+
+    private fun validate(image: String): Boolean {
+        matcher = pattern!!.matcher(image)
+        return matcher!!.matches()
+    }
+
+    private fun getRealPathFromURI(contentUri: Uri): String {
+        var cursor: Cursor? = null
+        try {
+            val proj = arrayOf(MediaStore.Images.Media.DATA)
+            cursor = activity!!.contentResolver.query(contentUri, proj, null, null, null)
+            val columnIndex = cursor!!.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+            cursor.moveToFirst()
+            return cursor.getString(columnIndex)
+        } finally {
+            cursor?.close()
+        }
+    }
+
+    private fun unknownFileFormat() {
+        Snackbar.make(view!!, "Unkown File Format", 3000).show()
     }
 
 
-    private fun createPdf(document: PdfDocument, bitmapPath: String) {
-        progress = (pageNo.toFloat().div(filesListDataResult.size).times(100f)).toInt()
+    @SuppressLint("SetTextI18n")
+    private tailrec fun createPdf(document: PdfDocument, bitmapPath: String) {
+        if (isPause) {
+            createPdf(document, MainActivity.filesListDataResult[pageNo])
+            return
+        }
+        if (isStop)
+            return
         activity!!.runOnUiThread {
-            if (!::progressDialog.isInitialized)
-                progressDialog = ProgressDialog.show(activity, "$progress%", "Please Wait", true)
-            progressDialog.setTitle("$progress%")
+            progress = (pageNo.toFloat().div(filesListDataResult.size).times(100f)).toInt()
+            if (dialog.mProgressPercentage != null)
+                dialog.mProgressPercentage.text = progress.toString() + "%"
         }
 
         val stream = ByteArrayOutputStream()
-        var bitmap = BitmapFactory.decodeFile(bitmapPath)
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-        bitmap = getResizedBitmap(bitmap, 535, 758)
+        var bitmap = decodeSampledBitmapFromResource(bitmapPath)
+
+        if (pref.isFitPage)
+            bitmap = getResizedBitmap(bitmap, 535, 758)
+
+        var compressBitmap: Bitmap
+        compressBitmap = bitmap
+
+        if (pref.isCompression < 100) {
+            Log.e("isCompression","${pref.isCompression}")
+            bitmap.compress(Bitmap.CompressFormat.JPEG, pref.isCompression, stream)
+            val streamBytes = stream.toByteArray()
+            compressBitmap = BitmapFactory.decodeByteArray(streamBytes, 0, streamBytes.size)
+        }
         pageInfo = PdfDocument.PageInfo.Builder(595, 842, pageNo).create()
         val page = document.startPage(pageInfo)
         val canvas = page.canvas
         val paint = Paint()
         paint.color = Color.RED
-        canvas.drawBitmap(bitmap, 30f, 42f, paint)
+        if (pref.isFitPage)
+            canvas.drawBitmap(compressBitmap, 30f, 42f, paint)
+        else
+            canvas.drawBitmap(compressBitmap, 0f, 0f, paint)
+        canvas.drawText("TechnocomSolution.com", 32f, canvas.height - 22f, textPaint)
         document.finishPage(page)
         bitmap.recycle()
         try {
@@ -158,7 +261,8 @@ class PdfView : BaseFragment(), RecyclerAdapter.ItemClick {
 
     }
 
-    fun getResizedBitmap(bm: Bitmap, newWidth: Int, newHeight: Int): Bitmap {
+
+    private fun getResizedBitmap(bm: Bitmap, newWidth: Int, newHeight: Int): Bitmap {
         val width = bm.width
         val height = bm.height
         val scaleWidth = newWidth.toFloat() / width
@@ -193,7 +297,7 @@ class PdfView : BaseFragment(), RecyclerAdapter.ItemClick {
         val pdfFile = File(Environment.getExternalStorageDirectory().absolutePath, "Image2Pdf")
         if (!pdfFile.exists())
             pdfFile.mkdir()
-        val createdPdf = File(pdfFile.path + "/Pdf_${System.currentTimeMillis()}.pdf")
+        val createdPdf = File(pdfFile.path + "/$fileName.pdf")
         try {
 
             val instream = FileInputStream(this.pdfFile)
@@ -218,28 +322,97 @@ class PdfView : BaseFragment(), RecyclerAdapter.ItemClick {
         } catch (ioe: IOException) {
             ioe.printStackTrace()
         }
-        activity!!.runOnUiThread({
+        activity!!.runOnUiThread {
+            if (mInterstitialAd.isLoaded)
+                mInterstitialAd.show()
             val snackbar = Snackbar.make(view!!, "Pdf Converted", 5000)
             snackbar.setAction("Open Pdf") { openPdf(createdPdf) }
             snackbar.setActionTextColor(Color.RED)
             snackbar.show()
-        })
+            db.logsDao().insertAll(Dto(0,fileName,System.currentTimeMillis(),filesListDataResult.size))
+        }
+
+        db.logsDao().getAll().subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(object : MaybeObserver<List<Dto>>{
+                    override fun onSuccess(t: List<Dto>) {
+                        toastLong(t.size)
+                    }
+
+                    override fun onComplete() {
+
+                    }
+
+                    override fun onSubscribe(d: Disposable) {
+
+                    }
+
+                    override fun onError(e: Throwable) {
+
+                    }
+                })
+    }
+
+    private fun nameDialog(): String {
+
+        val handler = @SuppressLint("HandlerLeak")
+        object : Handler() {
+            override fun handleMessage(msg: Message?) {
+                throw RuntimeException()
+            }
+        }
+        dialog.setContentView(R.layout.getfilename_dialog)
+        dialog.setCancelable(false)
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.mFilenameEditext.setText(fileName)
+        dialog.nameok.setOnClickListener {
+            fileName = dialog.mFilenameEditext.text.toString()
+            if (fileName.trim().isEmpty()) {
+                dialog.mFilenameEditext.error = "Field Empty"
+            }
+            handler.sendMessage(handler.obtainMessage())
+            isButtonPressed = true
+            dialog.dismiss()
+        }
+
+        dialog.nameCancel.setOnClickListener { handler.sendMessage(handler.obtainMessage());isButtonPressed = true;dialog.dismiss() }
+        dialog.show()
+
+        try {
+            Looper.loop()
+        } catch (e2: RuntimeException) {
+
+        }
+        isButtonPressed = false
+        return fileName
     }
 
     private fun progressView() {
-        if (!canClick)
+        if (MainActivity.filesListDataResult.size == 0) {
+            toastLong("list empty")
             return
-        progressBar.visibility = VISIBLE
-        canClick = false
+        }
+        pageNo = 0
+        isStop = false
+        isPause = false
+        fileName = if (pref.isAutoFilename)
+            "/Pdf_${System.currentTimeMillis()}"
+        else
+            nameDialog()
+
+        if (fileName.isEmpty()) {
+            snackbar("Filename Empty")
+            return
+        }
+        playAndPause()
         Completable.fromAction { createPDF() }.observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.newThread())
                 .subscribe(object : CompletableObserver {
                     override fun onComplete() {
-                       // progressDialog.progress = 100
+                        if (::dialog.isInitialized && dialog.isShowing) {
+                            dialog.dismiss()
 
-                        if (::progressDialog.isInitialized && progressDialog.isShowing)
-                            progressDialog.dismiss()
+                        }
                         canClick = true
-                        progressBar.visibility = GONE
                     }
 
                     override fun onSubscribe(d: Disposable) {
@@ -251,5 +424,66 @@ class PdfView : BaseFragment(), RecyclerAdapter.ItemClick {
 
                     }
                 })
+    }
+
+
+    private fun decodeSampledBitmapFromResource(res: String): Bitmap {
+
+        val bitmapFactory = BitmapFactory.Options()
+        bitmapFactory.inJustDecodeBounds = true
+        BitmapFactory.decodeFile(res, bitmapFactory)
+        bitmapFactory.inSampleSize = calculateInSampleSize(bitmapFactory)
+        // Decode bitmap with inSampleSize set
+        bitmapFactory.inJustDecodeBounds = false
+        return BitmapFactory.decodeFile(res, bitmapFactory)
+    }
+
+    private fun calculateInSampleSize(bitmapFactory: BitmapFactory.Options): Int {
+        // Raw height and width of image
+        val height = bitmapFactory.outHeight
+        val width = bitmapFactory.outWidth
+        var inSampleSize = 1
+
+        if (height > 758 || width > 535) {
+
+            val halfHeight = height / 2
+            val halfWidth = width / 2
+
+            while ((halfHeight / inSampleSize) >= 758
+                    && (halfWidth / inSampleSize) >= 535) {
+                inSampleSize *= 2
+            }
+        }
+
+        return inSampleSize
+    }
+
+    private fun playAndPause() {
+        dialog.setContentView(R.layout.custom_progress_dialog)
+        dialog.setCancelable(false)
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.show()
+        val anim = AnimationUtils.loadAnimation(activity, R.anim.spinning_stop)
+        dialog.mProgressDialog.startAnimation(anim)
+
+        dialog.mPlayPause.setOnCheckedChangeListener { buttonView, isChecked ->
+            isPause = isChecked
+            if (isPause)
+                anim.cancel()
+            else
+                dialog.mProgressDialog.startAnimation(anim)
+
+        }
+
+        dialog.mStop.setOnClickListener {
+            isStop = true
+            dialog.dismiss()
+        }
+    }
+
+    private fun InterstitialAdd() {
+        mInterstitialAd = InterstitialAd(activity)
+        mInterstitialAd.adUnitId = "ca-app-pub-9110061456871098/7756318281"
+        mInterstitialAd.loadAd(AdRequest.Builder().build())
     }
 }

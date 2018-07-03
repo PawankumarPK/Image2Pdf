@@ -16,7 +16,6 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:button="@drawable/checkbox_style"
         android:padding="5dp" />
 
 </RelativeLayout>
