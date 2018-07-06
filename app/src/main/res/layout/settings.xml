@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <ScrollView
         android:id="@+id/mScrollView"
@@ -16,6 +17,7 @@
             android:padding="10dp">
 
 
+
             <TextView
                 android:id="@+id/tv1"
                 android:layout_width="wrap_content"
@@ -23,7 +25,16 @@
                 android:text="Name:"
                 android:textColor="#c1000000"
                 android:textSize="20sp"
+                android:layout_marginStart="10dp"
                 android:textStyle="bold" />
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="5dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:elevation="3dp">
 
             <RadioGroup
                 android:id="@+id/mRadioGroupName"
@@ -47,6 +58,7 @@
                     android:text="Always Ask" />
 
             </RadioGroup>
+            </android.support.v7.widget.CardView>
 
 
             <TextView
@@ -55,10 +67,18 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:text="Size:"
+                android:layout_marginStart="10dp"
                 android:textColor="#c1000000"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="5dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:elevation="3dp">
 
             <RadioGroup
                 android:id="@+id/mRadioGroup"
@@ -81,6 +101,7 @@
                     android:text="Never Resize" />
 
             </RadioGroup>
+            </android.support.v7.widget.CardView>
 
             <TextView
                 android:id="@+id/mImageCompression"
@@ -88,9 +109,19 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:text="Image Compression:"
+                android:layout_marginStart="10dp"
                 android:textColor="#c1000000"
                 android:textSize="20sp"
                 android:textStyle="bold" />
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="5dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="5dp"
+                android:elevation="3dp">
 
             <RadioGroup
                 android:id="@+id/mCompressionRadio"
@@ -127,6 +158,9 @@
 
 
             </RadioGroup>
+
+            </android.support.v7.widget.CardView>
+
         </LinearLayout>
     </ScrollView>
 

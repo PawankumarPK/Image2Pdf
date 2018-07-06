@@ -12,6 +12,8 @@ import android.support.v4.content.ContextCompat
 import android.view.Menu
 import android.view.MenuItem
 import com.technocom.imagetopdf.R
+import com.technocom.imagetopdf.fragments.FeedBack
+import com.technocom.imagetopdf.fragments.History
 import com.technocom.imagetopdf.fragments.Home
 import com.technocom.imagetopdf.fragments.Settings
 import kotlinx.android.synthetic.main.activity_main.*
@@ -96,7 +98,7 @@ class MainActivity : BaseActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
 
         when (requestCode) {
-            PERMISSIONS_MULTIPLE_REQUEST -> if (grantResults.size > 0) {
+            PERMISSIONS_MULTIPLE_REQUEST -> if (grantResults.isNotEmpty()) {
                 val cameraPermission = grantResults[1] == PackageManager.PERMISSION_GRANTED
                 val readExternalFile = grantResults[0] == PackageManager.PERMISSION_GRANTED
 
@@ -126,7 +128,6 @@ class MainActivity : BaseActivity() {
         fun reset()
     }
 
-
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_items, menu)
         return true
@@ -136,10 +137,9 @@ class MainActivity : BaseActivity() {
         when (item.itemId) {
             R.id.mAboutUs -> startActivity(Intent(applicationContext, AboutUs::class.java))
             R.id.mSettings -> supportFragmentManager.beginTransaction().addToBackStack(null).replace(R.id.frame_container,Settings()).commit()
-
+            R.id.mSendFeedback -> supportFragmentManager.beginTransaction().addToBackStack(null).replace(R.id.frame_container,FeedBack()).commit()
+            R.id.mPDFlogs -> supportFragmentManager.beginTransaction().addToBackStack(null).replace(R.id.frame_container,History()).commit()
         }
         return super.onOptionsItemSelected(item);
     }
-
-
 }

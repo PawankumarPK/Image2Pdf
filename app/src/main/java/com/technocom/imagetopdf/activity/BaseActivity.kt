@@ -15,6 +15,8 @@ abstract class BaseActivity : AppCompatActivity() {
 
     lateinit var pref: Preferences
     lateinit var db: AppDatabase
+    lateinit var mainActivity: MainActivity
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

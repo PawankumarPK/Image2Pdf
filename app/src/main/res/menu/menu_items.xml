@@ -3,8 +3,24 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/mSendFeedback"
+        app:showAsAction="never"
+        android:orderInCategory="100"
+        android:title="Send Feedback"/>
+    <item
+        android:id="@+id/mPDFlogs"
+        app:showAsAction="never"
+        android:orderInCategory="100"
+        android:title="PDF logs"/>
+    <item
+        android:id="@+id/mSettings"
+        app:showAsAction="never"
+        android:orderInCategory="100"
+        android:title="Settings"/>
+    <item
         android:id="@+id/mAboutUs"
         app:showAsAction="never"
         android:orderInCategory="100"
         android:title="About Us"/>
+
 </menu>

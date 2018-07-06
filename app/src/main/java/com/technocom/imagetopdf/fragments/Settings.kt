@@ -29,7 +29,8 @@ class Settings : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        (activity as MainActivity).mReset.visibility = View.GONE
+        mainActivity.mReset.visibility = View.GONE
+        mainActivity.mTitle.text = resources.getString(R.string.settings)
         setDefaultSetting()
         mRadioGroupName.setOnCheckedChangeListener(radioListener)
         mRadioGroup.setOnCheckedChangeListener(radioListener)

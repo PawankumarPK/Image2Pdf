@@ -60,7 +60,7 @@ class FileExplorerAdapter(private val context: Context, private val filesList: L
                 intefaceListner.adapterInterface(filesList[pos].selected, pos)
             }
 
-            itemView.checkBox.isChecked = filesList[pos].selected
+            //itemView.checkBox.isChecked = file sList[pos].selected
 
             itemView.checkBox.setOnCheckedChangeListener { buttonView, isChecked ->
                 if (buttonView.isPressed) {

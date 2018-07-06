@@ -14,8 +14,6 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
 import com.technocom.imagetopdf.R
 import com.technocom.imagetopdf.activity.BaseActivity
 import com.technocom.imagetopdf.activity.MainActivity

@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">Image to PDF Converter</string>
+
+    <string name="AboutUs">Image To PDF Converter is an useful app for converting images or pictures to PDF file, you can select multiple images from Gallery or also you can capture images with mobile camera and converts them to a single PDF File and share instantly or you can open it with any PDF Editor/Viewer.</string>
+
+    <string name="settings">Settings</string>
+    <string name="home">Image to PDF Converter </string>
+    <string name="logs">Logs </string>
+    <string name="feedback">Feedback Form </string>
+
+
+
+    <string name="Steps">Steps to use :\n\n
+        1. Select the images from Gallery or capture from camera. \n 2. Convert to Pdf. \n 3. View list of all created PDF. \n 4. Open the PDF with any PDF viewer/editor. \n 5. Share or delete the pdf by long pressing the file in the list.</string>
 </resources>
+

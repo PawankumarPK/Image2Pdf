@@ -6,6 +6,7 @@ import android.support.v4.app.Fragment
 import android.widget.Toast
 import com.technocom.ApplicationClass
 import com.technocom.database.AppDatabase
+import com.technocom.imagetopdf.activity.MainActivity
 import com.technocom.imagetopdf.utils.Preferences
 
 /*
@@ -17,10 +18,11 @@ abstract class BaseFragment : Fragment() {
 
     lateinit var pref: Preferences
     lateinit var db: AppDatabase
-
+    lateinit var mainActivity: MainActivity
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mainActivity = activity as MainActivity
 
         db = ApplicationClass.database
 

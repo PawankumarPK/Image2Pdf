@@ -2,6 +2,8 @@ package com.technocom.imagetopdf.fragments
 
 import android.content.Intent
 import android.database.Cursor
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -19,6 +21,9 @@ import com.technocom.imagetopdf.activity.MainActivity
 import com.technocom.util.IabHelper
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_home.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -47,8 +52,9 @@ class Home : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         (activity as MainActivity).backArrow.visibility = View.GONE
-        (activity as MainActivity).mReset.visibility = View.GONE
-       // (activity as Settings).mReset.visibility = View.GONE
+        mainActivity.mReset.visibility = View.GONE
+        mainActivity.mTitle.text = resources.getString(R.string.home)
+        // (activity as Settings).mReset.visibility = View.GONE
 
         val base64EncodedPublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu+oqx2e1/PuZj+m44V3VESbhyMuuu1SV88K1aVshQBqjHbZexTtIeyzWnerztUp6fFMzDL4aYeuKo4xCZMqGee+eWjLkGf31vET+ZOPvWbgxGCj5/xK1/GJLZ7H8B6utPVqgdWusK30rOVTCjA6Iw9GevbFWwHgrPzs+N42PzqAOMkL0Y/DPVZBJBUKamgYGRLrLAYiKVJ73d6ONTQToIqqFqg/TmO0T7ixsO6jrKbTzI7/lZqtJbylkHQqrLnQy4m1QWGlJi1yPYtD+wSFKCC03tonAtN9CWTXEfymdU1JT7QizFK07+ShwPYIEGmrTQu1jLlFfTPSqIBNF49sR+wIDAQAB"
         mHelper = IabHelper(activity, base64EncodedPublicKey)
@@ -79,10 +85,37 @@ class Home : BaseFragment() {
 
         cameraLayout.setOnClickListener { startActivityForResult(Intent(context, CameraActivity::class.java), 1002) }
 
-        cameraFab.setOnClickListener { animateFab()
+        cameraFab.setOnClickListener {
+            animateFab()
             startActivityForResult(Intent(activity, CameraActivity::class.java), 1002)
         }
     }
+
+    private fun  decodeFile(f : File): Bitmap? {
+        try {
+            // Decode image size
+            val bitmapFactory = BitmapFactory.Options()
+            bitmapFactory.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(FileInputStream(f), null, bitmapFactory)
+
+            // The new size we want to scale to
+            val REQUIRED_SIZE = 70
+
+            // Find the correct scale value. It should be the power of 2.
+            var scale = 1
+            while (bitmapFactory.outWidth / scale / 2 >= REQUIRED_SIZE && bitmapFactory.outHeight / scale / 2 >= REQUIRED_SIZE) {
+                scale *= 2
+            }
+
+            // Decode with inSampleSize
+           val bitmapFactory2 =  BitmapFactory.Options()
+            bitmapFactory2.inSampleSize = scale
+            return BitmapFactory.decodeStream( FileInputStream (f), null, bitmapFactory2)
+        } catch (e : FileNotFoundException) {
+        }
+        return null
+    }
+
 
     private fun galleryIntent() {
         val photoPickerIntent = Intent(Intent.ACTION_PICK,

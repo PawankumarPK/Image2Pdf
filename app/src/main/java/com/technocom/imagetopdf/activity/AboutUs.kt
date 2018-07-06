@@ -35,10 +35,9 @@ class AboutUs : BaseActivity() {
             }
         }
 
-
         rateApp.setOnRatingBarChangeListener { _, _, _ -> ratingListener() }
-          version.text = "v.${BuildConfig.VERSION_NAME}"
-          close.setOnClickListener { finish() }
+        version.text = "v.${BuildConfig.VERSION_NAME}"
+        close.setOnClickListener { finish() }
         share.setOnClickListener {
             val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
             sharingIntent.type = "text/plain"
